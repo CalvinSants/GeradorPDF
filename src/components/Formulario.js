@@ -3,10 +3,22 @@ import StatusSelector from './StatusSelector';
 import { generatePdf } from '../pdfGenerator';
 
 const Formulario = () => {
-  const [pbi, setPbi] = useState('');
-  const [qa, setQa] = useState('Calvin Santana dos Santos');
-  const [confidencialidade, setConfidencialidade] = useState('Público');
+  // --- CONSTANTES DE OPÇÕES --- (Boa prática definir fora para não recriar em cada render)
+  const qaOptionsList = [
+    'Calvin Santana dos Santos',
+    'Ana Julia da Silva',
+    'Roberto Carlos Almeida',
+  ];
 
+  const confidencialidadeOptionsList = [
+    'Público',
+    'Interno',
+    'Confidencial',
+    'Confidencial Restrito',
+    'Secreto',
+  ];
+
+  // --- FUNÇÃO DE FORMATAÇÃO DE DATA ---
   const formatDateWithTime = () => {
     return new Date().toLocaleString('pt-BR', {
       day: '2-digit',
@@ -18,59 +30,47 @@ const Formulario = () => {
     });
   };
 
-  const [cenarios, setCenarios] = useState([
-    {
-      id: Date.now(),
-      valor: '',
-      steps: [
-        {
-          id: Date.now() + 1,
-          descricao: '',
-          imagem: null,
-          imagemPreview: null,
-          status: 'espera',
-          dataCriacao: formatDateWithTime(), // ATUALIZADO AQUI
-        },
-      ],
-    },
-  ]);
+  // --- ESTADO INICIAL PARA UM STEP ---
+  const createInitialStep = () => ({
+    id: Date.now() + Math.random(), // ID mais único
+    descricao: '',
+    imagem: null,
+    imagemPreview: null,
+    status: 'espera',
+    dataCriacao: formatDateWithTime(),
+  });
 
-  const qaOptions = [
-    'Calvin Santana dos Santos',
-    'Ana Julia da Silva',
-    'Roberto Carlos Almeida',
-  ];
+  // --- ESTADO INICIAL PARA UM CENÁRIO ---
+  const createInitialCenario = () => ({
+    id: Date.now() + Math.random(), // ID mais único
+    valor: '',
+    steps: [createInitialStep()],
+  });
 
-  const confidencialidadeOptions = [
-    'Público',
-    'Interno',
-    'Confidencial',
-    'Confidencial Restrito',
-    'Secreto',
-  ];
+  // --- ESTADOS DO FORMULÁRIO ---
+  const [pbi, setPbi] = useState('');
+  const [qa, setQa] = useState(qaOptionsList[0]); // Usa o primeiro da lista como padrão
+  const [confidencialidade, setConfidencialidade] = useState(confidencialidadeOptionsList[0]); // Usa o primeiro da lista
+  const [cenarios, setCenarios] = useState([createInitialCenario()]);
 
-  const handleAddCenario = () => {
-    const newCenarioId = Date.now();
-    setCenarios([
-      ...cenarios,
-      {
-        id: newCenarioId,
-        valor: '',
-        steps: [
-          {
-            id: Date.now() + 1,
-            descricao: '',
-            imagem: null,
-            imagemPreview: null,
-            status: 'espera',
-            dataCriacao: formatDateWithTime(), // ATUALIZADO AQUI
-          },
-        ],
-      },
-    ]);
+
+  // --- FUNÇÃO PARA LIMPAR O FORMULÁRIO ---
+  const handleLimparFormulario = () => {
+    setPbi('');
+    setQa(qaOptionsList[0]); // Redefine para o primeiro QA da lista
+    setConfidencialidade(confidencialidadeOptionsList[0]); // Redefine para a primeira opção de confidencialidade
+    setCenarios([createInitialCenario()]); // Redefine para um cenário com um step inicial
+    
+    // Opcional: rolar para o topo do formulário
+    window.scrollTo(0, 0);
   };
 
-  // ... (handleRemoveCenario, handleCenarioChange permanecem iguais) ...
+
+  // --- Funções para Cenários ---
+  const handleAddCenario = () => {
+    setCenarios([...cenarios, createInitialCenario()]);
+  };
+
   const handleRemoveCenario = (cenarioId) => {
     setCenarios(cenarios.filter((c) => c.id !== cenarioId));
   };
@@ -83,7 +83,7 @@ const Formulario = () => {
     );
   };
 
-
+  // --- Funções para Steps ---
   const handleAddStep = (cenarioId) => {
     setCenarios(
       cenarios.map((cenario) =>
@@ -92,14 +92,7 @@ const Formulario = () => {
               ...cenario,
               steps: [
                 ...cenario.steps,
-                {
-                  id: Date.now(),
-                  descricao: '',
-                  imagem: null,
-                  imagemPreview: null,
-                  status: 'espera',
-                  dataCriacao: formatDateWithTime(), // ATUALIZADO AQUI
-                },
+                createInitialStep(), // Usa a função para criar um novo step
               ],
             }
           : cenario
@@ -107,7 +100,7 @@ const Formulario = () => {
     );
   };
 
-  // ... (handleRemoveStep, handleStepChange, handleStepImageChange, handleSubmit permanecem iguais) ...
+  // ... (handleRemoveStep, handleStepChange, handleStepImageChange permanecem iguais) ...
   const handleRemoveStep = (cenarioId, stepId) => {
     setCenarios(
       cenarios.map((cenario) =>
@@ -174,6 +167,7 @@ const Formulario = () => {
     }
   };
 
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = {
@@ -187,10 +181,6 @@ const Formulario = () => {
     console.log('Dados do Formulário:', formData);
     generatePdf(formData);
   };
-
-  // O JSX de renderização não precisa de alterações para esta funcionalidade,
-  // pois o campo dataCriacao já é exibido como um input readOnly.
-  // A mudança no formato do valor será refletida automaticamente.
 
   return (
     <div className="form-container">
@@ -210,9 +200,9 @@ const Formulario = () => {
 
         {/* QA */}
         <div className="form-group">
-          <label htmlFor="qa">QA:</label>
+          <label htmlFor="qa">QA Tester:</label>
           <select id="qa" value={qa} onChange={(e) => setQa(e.target.value)} required >
-            {qaOptions.map((option) => ( <option key={option} value={option}> {option} </option> ))}
+            {qaOptionsList.map((option) => ( <option key={option} value={option}> {option} </option> ))}
           </select>
         </div>
 
@@ -220,11 +210,11 @@ const Formulario = () => {
         <div className="form-group">
           <label htmlFor="confidencialidade">Nível de Confidencialidade:</label>
           <select id="confidencialidade" value={confidencialidade} onChange={(e) => setConfidencialidade(e.target.value)} required >
-            {confidencialidadeOptions.map((option) => ( <option key={option} value={option}> {option} </option> ))}
+            {confidencialidadeOptionsList.map((option) => ( <option key={option} value={option}> {option} </option> ))}
           </select>
         </div>
 
-        {/* Cenários */}
+        {/* ... (renderização dos cenários e steps permanece a mesma) ... */}
         <div className="form-group">
           <h2>Cenários de Teste</h2>
           {cenarios.map((cenario, cenarioIndex) => (
@@ -250,7 +240,6 @@ const Formulario = () => {
                 style={{width: '100%', minHeight: '60px'}}
               />
 
-              {/* Steps para ESTE Cenário */}
               <div className="steps-container" style={{marginTop: '15px', marginLeft: '20px', borderLeft: '2px solid #ccc', paddingLeft: '15px'}}>
                 <h4>Steps do Cenário {cenarioIndex + 1}</h4>
                 {cenario.steps.map((step, stepIndex) => (
@@ -283,6 +272,9 @@ const Formulario = () => {
                         type="file"
                         id={`step-img-${step.id}`}
                         accept="image/*"
+                        // Importante: limpar o valor do input file ao limpar o formulário é complicado
+                        // A melhor abordagem é resetar o estado da imagem e preview
+                        // O input file em si não é facilmente resetado programaticamente por razões de segurança
                         onChange={(e) => handleStepImageChange(cenario.id, step.id, e.target.files[0])}
                       />
                       {step.imagemPreview && (
@@ -320,9 +312,19 @@ const Formulario = () => {
 
         <hr style={{margin: '30px 0'}}/>
 
-        <button type="submit" className="button-santander" style={{backgroundColor: '#CC0000', width: '100%', padding: '15px'}}>
-          Gerar PDF com Evidências
-        </button>
+        {/* BOTÕES DE AÇÃO NO FINAL DO FORMULÁRIO */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
+          <button
+            type="button" // Importante: type="button" para não submeter o formulário
+            className="button-clear" // Usaremos esta classe para estilizar
+            onClick={handleLimparFormulario}
+          >
+            Limpar Formulário
+          </button>
+          <button type="submit" className="button-santander" style={{backgroundColor: '#CC0000'}}>
+            Gerar PDF com Evidências
+          </button>
+        </div>
       </form>
     </div>
   );

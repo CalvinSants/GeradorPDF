@@ -67,6 +67,17 @@ h1, h2 {
   font-size: 14px;
 }
 
+.button-clear {
+  background-color: #CC0000; /* Cor Santander */
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 10px;
+}
+
 .button-delete:hover {
   background-color: #5a6268;
 }
